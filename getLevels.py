@@ -12,12 +12,9 @@ levelsHeader = None
 tablesSelectedHeader = None
 for x in firstColumn:
     if x == "Layout Types:":
-        #print(list(firstColumn).index("Layout Types:"))
         levelsHeader = firstColumn[firstColumn =="Layout Types:"].index[0]
     if x == "Tables Selected:":
         tablesSelectedHeader = firstColumn[firstColumn =="Tables Selected:"].index[0]
-
-
 
 levels = firstColumn[levelsHeader+1:tablesSelectedHeader]
 
@@ -43,7 +40,6 @@ storyData_df_sorted[5]=storyData_df_sorted[4].cumsum()
 print(storyData_df_sorted)
 
 xGrid_df_Header = firstColumn[firstColumn ==" X Grids"].index[0]
-#print(xGrid_df_Header)
 
 xGridCount =0
 while True:
@@ -68,3 +64,31 @@ while True:
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
 print(yGrid_df)
+
+steelBeamRxn_df = pd.read_excel("reactions.xlsx", header = None)
+steelBeamRxn_df.index+=1
+
+firstColumnSteelBeamRxns = steelBeamRxn_df.iloc[:,0]
+
+floorTypeIndexes = []
+for index, val in firstColumnSteelBeamRxns.iteritems():
+	if isinstance( val, str ):
+		if "Floor Type:" in val:
+			floorTypeIndexes.append(index)
+
+
+steelBeamRxnPerFloorType_df_startIndexes = []
+for index in floorTypeIndexes:
+	index+=2
+	steelBeamRxnPerFloorType_df_startIndexes.append(index)
+
+steelBeamRxnPerFloorType_df_endIndexes = steelBeamRxnPerFloorType_df_startIndexes[1:]
+steelBeamRxnPerFloorType_df_endIndexes[:] = [x-3 for x in steelBeamRxnPerFloorType_df_endIndexes]
+
+rowCount = steelBeamRxn_df.shape[0]
+steelBeamRxnPerFloorType_df_endIndexes.append(rowCount+1)
+
+steelBeamRxnPerFloorType_df_list = []
+for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
+	steelBeamRxnPerFloorType_df=steelBeamRxn_df.iloc[steelBeamRxnPerFloorType_df_startIndexes[i]:steelBeamRxnPerFloorType_df_endIndexes[i],2:10]
+	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
