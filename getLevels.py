@@ -1,6 +1,7 @@
 
 
 import pandas as pd
+import math
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
 
@@ -46,8 +47,8 @@ xGrid_df_Header = firstColumn[firstColumn ==" X Grids"].index[0]
 
 xGridCount =0
 while True:
-	gridCoordinate = df.loc[xGrid_df_Header+2+xGridCount,2]
-	if not isinstance( gridCoordinate, str ):
+	xGridCoordinate = df.loc[xGrid_df_Header+2+xGridCount,2]
+	if not isinstance( xGridCoordinate, str ):
 		xGridCount+=1
 	else:
 		break
@@ -55,3 +56,15 @@ while True:
 
 xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
 print(xGrid_df)
+
+yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
+yGridCount =0
+while True:
+	yGridCoordinate = df.loc[yGrid_df_Header+2+yGridCount,2]
+	if math.isnan(yGridCoordinate):
+		break
+	else:
+		yGridCount+=1
+
+yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
+print(yGrid_df)
