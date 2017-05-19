@@ -85,9 +85,11 @@ steelBeamRxn_df.index+=1
 firstColumnSteelBeamRxns = steelBeamRxn_df.iloc[:,0]
 
 floorTypeIndexes = []
+floorTypes = []
 for index, val in firstColumnSteelBeamRxns.iteritems():
 	if isinstance( val, str ):
 		if "Floor Type:" in val:
+			floorTypes.append(val)
 			floorTypeIndexes.append(index)
 
 
@@ -114,4 +116,23 @@ origin_RAM = Coordinate(yGrid_df_sorted.iloc[0,1],xGrid_df_sorted.iloc[0,1])
 for df in steelBeamRxnPerFloorType_df_list:
 	df['Size'] = df['Size'].str.strip()
 
-#print(steelBeamRxnPerFloorType_df_list[2])
+print(steelBeamRxnPerFloorType_df_list[2])
+
+# TODO: Create dictionary from steelBeamRxnPerFloorType_df_list to level (header)
+
+steelBeamRxnPerFloorType_dict = {}
+
+def checkCountFloorToDFMapping():
+	steelBeamRxnPerFloorType_df_count = len(steelBeamRxnPerFloorType_df_list)
+	floorTypes_count = len(floorTypes)
+	return steelBeamRxnPerFloorType_df_count == floorTypes_count
+
+def createSteelBeamRxnPerFloorTypeMapping():
+	if(checkCountFloorToDFMapping()):
+		for i in range(0, len(steelBeamRxnPerFloorType_df_list)):
+			steelBeamRxnPerFloorType_dict[floorTypes[i]] = steelBeamRxnPerFloorType_df_list[i]
+	else:
+		raise ValueError('Count mismatch between number of floor types classified and the coresponding number of data frames generated')
+
+createSteelBeamRxnPerFloorTypeMapping()
+print(steelBeamRxnPerFloorType_dict)
