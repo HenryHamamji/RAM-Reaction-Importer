@@ -8,44 +8,72 @@ class Coordinate:
 		self.x = x
 		self.y = y
 
+class RAM_Analytical_Model:
+	steelBeamRxnPerFloorType_dict = {}
+	LayoutTypes = []
+	LevelCount = 0
+	origin_RAM = Coordinate(0,0)
+	Stories = []
 
+ramAnalyticalModel = RAM_Analytical_Model()
+
+
+class Story:
+	def __init__(self, level, storyLabel, layoutType, height):
+		self.Level = level
+		self.StoryLabel = storyLabel
+		self.LayoutType = layoutType
+		self.Height = height
+		self.Elevation = 0
+
+s1 = Story(1, 'Level 1', 'Floor Type: LEVEL 1', 12 )
+#print(s1.Level, s1.StoryLabel, s1.LayoutType, s1.Height, s1.Elevation)
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
 
 firstColumn = df.iloc[:,0]
 
 
-levelsHeader = None
+layoutTypesHeader = None
 tablesSelectedHeader = None
 for x in firstColumn:
     if x == "Layout Types:":
-        levelsHeader = firstColumn[firstColumn =="Layout Types:"].index[0]
+        layoutTypesHeader = firstColumn[firstColumn =="Layout Types:"].index[0]
     if x == "Tables Selected:":
         tablesSelectedHeader = firstColumn[firstColumn =="Tables Selected:"].index[0]
 
-levels = firstColumn[levelsHeader+1:tablesSelectedHeader]
+ramAnalyticalModel.LayoutTypes = firstColumn[layoutTypesHeader:tablesSelectedHeader-1]
+
+
+
 
 storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
-
-
 levelsToHeightDictStart = storyDataHeader
 
-levelCount =0
-while True:
-	level = df.loc[storyDataHeader+2+levelCount,0]
-	if isinstance( level, int ):
-		levelCount+=1
-	else:
-		break
+def DetermineNumLevels():
+	while True:
+		level = df.loc[storyDataHeader+2+ramAnalyticalModel.LevelCount,0]
+		if isinstance( level, int ):
+			ramAnalyticalModel.LevelCount+=1
+		else:
+			break
 
-storyData_df=df.iloc[storyDataHeader+1:storyDataHeader+levelCount+1,0:5]
+DetermineNumLevels()
 
-storyData_df_sorted = storyData_df.sort_values(0,ascending = True)
+def GetStoryData():
+	storyData_df=df.iloc[storyDataHeader+1:storyDataHeader+ramAnalyticalModel.LevelCount+1,0:5]
+	storyData_df_sorted = storyData_df.sort_values(0,ascending = True)
+	storyData_df_sorted.columns = ['Level', 'NaN', 'Story Label', 'Layout Type', 'Height']
+	storyData_df_sorted = storyData_df_sorted.drop('NaN', 1)
+	storyData_df_sorted['Elevation']=storyData_df_sorted['Height'].cumsum()
+	print(storyData_df_sorted)
+	
+GetStoryData()
 
-storyData_df_sorted[5]=storyData_df_sorted[4].cumsum()
+#TODO: create mapping from level/ label / elevation to layout type.
 
-#print(storyData_df_sorted)
 
+# GET RAM GRID INFO
 xGrid_df_Header = firstColumn[firstColumn ==" X Grids"].index[0]
 
 xGridCount =0
@@ -110,17 +138,13 @@ for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
 	steelBeamRxnPerFloorType_df.columns = ['Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
 	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
 
-origin_RAM = Coordinate(yGrid_df_sorted.iloc[0,1],xGrid_df_sorted.iloc[0,1])
-#print(origin_RAM.x, origin_RAM.y)
+ramAnalyticalModel.origin_RAM.x = yGrid_df_sorted.iloc[0,1]
+ramAnalyticalModel.origin_RAM.y = xGrid_df_sorted.iloc[0,1]
+#print(ramAnalyticalModel.origin_RAM.x, ramAnalyticalModel.origin_RAM.y)
 
 for df in steelBeamRxnPerFloorType_df_list:
 	df['Size'] = df['Size'].str.strip()
 
-print(steelBeamRxnPerFloorType_df_list[2])
-
-# TODO: Create dictionary from steelBeamRxnPerFloorType_df_list to level (header)
-
-steelBeamRxnPerFloorType_dict = {}
 
 def checkCountFloorToDFMapping():
 	steelBeamRxnPerFloorType_df_count = len(steelBeamRxnPerFloorType_df_list)
@@ -130,9 +154,9 @@ def checkCountFloorToDFMapping():
 def createSteelBeamRxnPerFloorTypeMapping():
 	if(checkCountFloorToDFMapping()):
 		for i in range(0, len(steelBeamRxnPerFloorType_df_list)):
-			steelBeamRxnPerFloorType_dict[floorTypes[i]] = steelBeamRxnPerFloorType_df_list[i]
+			ramAnalyticalModel.steelBeamRxnPerFloorType_dict[floorTypes[i]] = steelBeamRxnPerFloorType_df_list[i]
 	else:
 		raise ValueError('Count mismatch between number of floor types classified and the coresponding number of data frames generated')
 
 createSteelBeamRxnPerFloorTypeMapping()
-print(steelBeamRxnPerFloorType_dict)
+#print(ramAnalyticalModel.steelBeamRxnPerFloorType_dict)
