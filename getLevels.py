@@ -19,14 +19,13 @@ ramAnalyticalModel = RAM_Analytical_Model()
 
 
 class Story:
-	def __init__(self, level, storyLabel, layoutType, height):
+	def __init__(self, level, storyLabel, layoutType, height, elevation):
 		self.Level = level
 		self.StoryLabel = storyLabel
 		self.LayoutType = layoutType
 		self.Height = height
-		self.Elevation = 0
+		self.Elevation = elevation
 
-s1 = Story(1, 'Level 1', 'Floor Type: LEVEL 1', 12 )
 #print(s1.Level, s1.StoryLabel, s1.LayoutType, s1.Height, s1.Elevation)
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
@@ -60,16 +59,26 @@ def DetermineNumLevels():
 
 DetermineNumLevels()
 
-def GetStoryData():
+def ProvideStoryData(df):
+	for i in range(0, len(df)):
+		story = Story(df.iloc[i]['Level'], df.iloc[i]['Story Label'], df.iloc[i]['Layout Type'], df.iloc[i]['Height'], df.iloc[i]['Elevation'])
+		RAM_Analytical_Model.Stories.append(story)
+
+def CreateStoryDataFrane():
 	storyData_df=df.iloc[storyDataHeader+1:storyDataHeader+ramAnalyticalModel.LevelCount+1,0:5]
 	storyData_df_sorted = storyData_df.sort_values(0,ascending = True)
 	storyData_df_sorted.columns = ['Level', 'NaN', 'Story Label', 'Layout Type', 'Height']
 	storyData_df_sorted = storyData_df_sorted.drop('NaN', 1)
 	storyData_df_sorted['Elevation']=storyData_df_sorted['Height'].cumsum()
-	print(storyData_df_sorted)
-	
-GetStoryData()
+	#print(storyData_df_sorted)
+	ProvideStoryData(storyData_df_sorted)
 
+CreateStoryDataFrane()
+
+
+
+
+#print(ramAnalyticalModel.Stories[1].Level, ramAnalyticalModel.Stories[1].StoryLabel, ramAnalyticalModel.Stories[1].LayoutType, ramAnalyticalModel.Stories[1].Height, ramAnalyticalModel.Stories[1].Elevation)
 #TODO: create mapping from level/ label / elevation to layout type.
 
 
