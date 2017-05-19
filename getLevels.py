@@ -2,6 +2,13 @@
 
 import pandas as pd
 import math
+
+class Coordinate:
+	def __init__(self,x,y):
+		self.x = x
+		self.y = y
+
+
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
 
@@ -37,7 +44,7 @@ storyData_df_sorted = storyData_df.sort_values(0,ascending = True)
 
 storyData_df_sorted[5]=storyData_df_sorted[4].cumsum()
 
-print(storyData_df_sorted)
+#print(storyData_df_sorted)
 
 xGrid_df_Header = firstColumn[firstColumn ==" X Grids"].index[0]
 
@@ -51,7 +58,9 @@ while True:
 
 
 xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
-print(xGrid_df)
+xGrid_df_sorted = xGrid_df.sort_values(1,ascending = True)
+
+#print(xGrid_df_sorted)
 
 yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
 yGridCount =0
@@ -63,7 +72,12 @@ while True:
 		yGridCount+=1
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
-print(yGrid_df)
+
+
+yGrid_df_sorted = yGrid_df.sort_values(1,ascending = True)
+#print(yGrid_df_sorted)
+
+
 
 steelBeamRxn_df = pd.read_excel("reactions.xlsx", header = None)
 steelBeamRxn_df.index+=1
@@ -91,4 +105,13 @@ steelBeamRxnPerFloorType_df_endIndexes.append(rowCount+1)
 steelBeamRxnPerFloorType_df_list = []
 for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
 	steelBeamRxnPerFloorType_df=steelBeamRxn_df.iloc[steelBeamRxnPerFloorType_df_startIndexes[i]:steelBeamRxnPerFloorType_df_endIndexes[i],2:10]
+	steelBeamRxnPerFloorType_df.columns = ['Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
 	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
+
+origin_RAM = Coordinate(yGrid_df_sorted.iloc[0,1],xGrid_df_sorted.iloc[0,1])
+#print(origin_RAM.x, origin_RAM.y)
+
+for df in steelBeamRxnPerFloorType_df_list:
+	df['Size'] = df['Size'].str.strip()
+
+#print(steelBeamRxnPerFloorType_df_list[2])
