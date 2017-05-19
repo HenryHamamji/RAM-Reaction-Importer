@@ -26,30 +26,30 @@ class Story:
 		self.Height = height
 		self.Elevation = elevation
 
-#print(s1.Level, s1.StoryLabel, s1.LayoutType, s1.Height, s1.Elevation)
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
 
 firstColumn = df.iloc[:,0]
 
+def GetFloorLayoutTypes():
+	layoutTypesHeader = None
+	tablesSelectedHeader = None
+	for x in firstColumn:
+	    if x == "Layout Types:":
+	        layoutTypesHeader = firstColumn[firstColumn =="Layout Types:"].index[0]
+	    if x == "Tables Selected:":
+	        tablesSelectedHeader = firstColumn[firstColumn =="Tables Selected:"].index[0]
 
-layoutTypesHeader = None
-tablesSelectedHeader = None
-for x in firstColumn:
-    if x == "Layout Types:":
-        layoutTypesHeader = firstColumn[firstColumn =="Layout Types:"].index[0]
-    if x == "Tables Selected:":
-        tablesSelectedHeader = firstColumn[firstColumn =="Tables Selected:"].index[0]
+	ramAnalyticalModel.LayoutTypes = firstColumn[layoutTypesHeader:tablesSelectedHeader-1]
 
-ramAnalyticalModel.LayoutTypes = firstColumn[layoutTypesHeader:tablesSelectedHeader-1]
+GetFloorLayoutTypes()
 
 
-
-
-storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
-levelsToHeightDictStart = storyDataHeader
+#storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
+#levelsToHeightDictStart = storyDataHeader
 
 def DetermineNumLevels():
+	storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
 	while True:
 		level = df.loc[storyDataHeader+2+ramAnalyticalModel.LevelCount,0]
 		if isinstance( level, int ):
@@ -65,6 +65,7 @@ def ProvideStoryData(df):
 		RAM_Analytical_Model.Stories.append(story)
 
 def CreateStoryDataFrane():
+	storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
 	storyData_df=df.iloc[storyDataHeader+1:storyDataHeader+ramAnalyticalModel.LevelCount+1,0:5]
 	storyData_df_sorted = storyData_df.sort_values(0,ascending = True)
 	storyData_df_sorted.columns = ['Level', 'NaN', 'Story Label', 'Layout Type', 'Height']
