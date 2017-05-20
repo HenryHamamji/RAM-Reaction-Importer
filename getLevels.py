@@ -2,20 +2,34 @@
 
 import pandas as pd
 import math
+import json
+import jsonpickle
 
 class Coordinate:
 	def __init__(self,x,y):
 		self.x = x
 		self.y = y
 
+steelBeamRxnPerFloorType_dict = {}
 class RAM_Analytical_Model:
-	steelBeamRxnPerFloorType_dict = {}
-	LayoutTypes = []
-	LevelCount = 0
-	origin_RAM = Coordinate(0,0)
-	Stories = []
+		def __init__(self, layoutTypes = [], levelCount=0, origin_RAM = Coordinate(0,0), stories = [], beams = []):
+			self.LayoutTypes = layoutTypes
+			self.LevelCount = levelCount
+			self.Origin_RAM = origin_RAM
+			self.Stories = stories
+			self.Beams = beams
 
 ramAnalyticalModel = RAM_Analytical_Model()
+
+class Beam:
+	def __init__(self, layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
+		self.LayoutType = layoutType
+		self.Size = size
+		self.Start_Coordinate = start_Coordinate
+		self.End_Coordinate = end_coordinate
+		self.StartTotalRxnPositive = startTotalRxnPositive
+		self.EndTotalRxnPositive = endTotalRxnPositive
+
 
 
 class Story:
@@ -40,13 +54,9 @@ def GetFloorLayoutTypes():
 	    if x == "Tables Selected:":
 	        tablesSelectedHeader = firstColumn[firstColumn =="Tables Selected:"].index[0]
 
-	ramAnalyticalModel.LayoutTypes = firstColumn[layoutTypesHeader:tablesSelectedHeader-1]
+	ramAnalyticalModel.LayoutTypes = firstColumn[layoutTypesHeader:tablesSelectedHeader-1].tolist()
 
 GetFloorLayoutTypes()
-
-
-#storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
-#levelsToHeightDictStart = storyDataHeader
 
 def DetermineNumLevels():
 	storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
@@ -62,7 +72,7 @@ DetermineNumLevels()
 def ProvideStoryData(df):
 	for i in range(0, len(df)):
 		story = Story(df.iloc[i]['Level'], df.iloc[i]['Story Label'], df.iloc[i]['Layout Type'], df.iloc[i]['Height'], df.iloc[i]['Elevation'])
-		RAM_Analytical_Model.Stories.append(story)
+		ramAnalyticalModel.Stories.append(story)
 
 def CreateStoryDataFrane():
 	storyDataHeader = firstColumn[firstColumn =="Story Data:"].index[0]
@@ -71,12 +81,9 @@ def CreateStoryDataFrane():
 	storyData_df_sorted.columns = ['Level', 'NaN', 'Story Label', 'Layout Type', 'Height']
 	storyData_df_sorted = storyData_df_sorted.drop('NaN', 1)
 	storyData_df_sorted['Elevation']=storyData_df_sorted['Height'].cumsum()
-	#print(storyData_df_sorted)
 	ProvideStoryData(storyData_df_sorted)
 
 CreateStoryDataFrane()
-
-
 
 
 #print(ramAnalyticalModel.Stories[1].Level, ramAnalyticalModel.Stories[1].StoryLabel, ramAnalyticalModel.Stories[1].LayoutType, ramAnalyticalModel.Stories[1].Height, ramAnalyticalModel.Stories[1].Elevation)
@@ -98,8 +105,6 @@ while True:
 xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
 xGrid_df_sorted = xGrid_df.sort_values(1,ascending = True)
 
-#print(xGrid_df_sorted)
-
 yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
 yGridCount =0
 while True:
@@ -110,16 +115,14 @@ while True:
 		yGridCount+=1
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
-
-
 yGrid_df_sorted = yGrid_df.sort_values(1,ascending = True)
-#print(yGrid_df_sorted)
 
+ramAnalyticalModel.Origin_RAM.x = yGrid_df_sorted.iloc[0,1]
+ramAnalyticalModel.Origin_RAM.y = xGrid_df_sorted.iloc[0,1]
 
-
+# GET STEEL BEAM REACTION DATA
 steelBeamRxn_df = pd.read_excel("reactions.xlsx", header = None)
 steelBeamRxn_df.index+=1
-
 firstColumnSteelBeamRxns = steelBeamRxn_df.iloc[:,0]
 
 floorTypeIndexes = []
@@ -148,9 +151,6 @@ for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
 	steelBeamRxnPerFloorType_df.columns = ['Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
 	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
 
-ramAnalyticalModel.origin_RAM.x = yGrid_df_sorted.iloc[0,1]
-ramAnalyticalModel.origin_RAM.y = xGrid_df_sorted.iloc[0,1]
-#print(ramAnalyticalModel.origin_RAM.x, ramAnalyticalModel.origin_RAM.y)
 
 for df in steelBeamRxnPerFloorType_df_list:
 	df['Size'] = df['Size'].str.strip()
@@ -164,9 +164,37 @@ def checkCountFloorToDFMapping():
 def createSteelBeamRxnPerFloorTypeMapping():
 	if(checkCountFloorToDFMapping()):
 		for i in range(0, len(steelBeamRxnPerFloorType_df_list)):
-			ramAnalyticalModel.steelBeamRxnPerFloorType_dict[floorTypes[i]] = steelBeamRxnPerFloorType_df_list[i]
+			steelBeamRxnPerFloorType_dict[floorTypes[i]] = steelBeamRxnPerFloorType_df_list[i]
 	else:
 		raise ValueError('Count mismatch between number of floor types classified and the coresponding number of data frames generated')
 
 createSteelBeamRxnPerFloorTypeMapping()
-#print(ramAnalyticalModel.steelBeamRxnPerFloorType_dict)
+
+
+# Provide Beam Reaction Data
+# TODO: Handle case only start is provided.
+def ProvideBeamRxnData():
+	for key, value in steelBeamRxnPerFloorType_dict.items():
+		limit = len(value)-1
+		#print(limit)
+		for i in range(0, limit,2):
+			beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
+				value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
+			ramAnalyticalModel.Beams.append(beam)
+			#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
+			#print(key)
+			tempInt = 14
+	print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
+		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
+		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
+		ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
+
+ProvideBeamRxnData()
+
+#print(steelBeamRxnPerFloorType_df_list[0])
+
+with open('RAM_Analytical_Model.txt', 'w') as outfile:
+	ramAnalyticalModelString = jsonpickle.encode(ramAnalyticalModel.Beams[7])
+	#ramAnalyticalModelString = steelBeamRxnPerFloorType_df_list[0].to_json(orient='split')
+	outfile.write(ramAnalyticalModelString)
+    #json.dump(ramAnalyticalModel.LayoutTypes, outfile)
