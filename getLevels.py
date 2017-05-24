@@ -43,7 +43,11 @@ class Story:
 df = pd.read_excel("data echo.xlsx", header = None)
 df.index+=1
 
-firstColumn = df.iloc[:,0]
+def getFirstColumn_df(df):
+	return df.iloc[:,0]
+
+firstColumn = getFirstColumn_df(df)
+
 
 def GetFloorLayoutTypes():
 	layoutTypesHeader = None
@@ -176,18 +180,34 @@ createSteelBeamRxnPerFloorTypeMapping()
 def ProvideBeamRxnData():
 	for key, value in steelBeamRxnPerFloorType_dict.items():
 		limit = len(value)-1
+		step = 2
 		#print(limit)
-		for i in range(0, limit,2):
-			beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
-				value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
-			ramAnalyticalModel.Beams.append(beam)
-			#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
-			#print(key)
-			tempInt = 14
+
+		for i in range(0, limit,step):
+			nextSize = value.iloc[i+1]['Size']
+			print(nextSize)
+			if not isinstance( nextSize, str ):
+				if not math.isnan(nextSize):
+					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
+						value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
+					ramAnalyticalModel.Beams.append(beam)
+					i+=-1
+					
+				else:
+					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
+						value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
+					ramAnalyticalModel.Beams.append(beam)
+					#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
+					#print(key)
+	tempInt = 14
 	print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
 		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
+	#if math.isnan(ramAnalyticalModel.Beams[tempInt].Size):
+		#boolean = True
+		#print(boolean)
+	#print(steelBeamRxnPerFloorType_dict.values())
 
 ProvideBeamRxnData()
 
