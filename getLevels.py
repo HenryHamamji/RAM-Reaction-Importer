@@ -32,6 +32,7 @@ class Beam:
 
 
 
+
 class Story:
 	def __init__(self, level, storyLabel, layoutType, height, elevation):
 		self.Level = level
@@ -180,26 +181,29 @@ createSteelBeamRxnPerFloorTypeMapping()
 def ProvideBeamRxnData():
 	for key, value in steelBeamRxnPerFloorType_dict.items():
 		limit = len(value)-1
-		step = 2
-		#print(limit)
+		print(limit)
+		i =0
 
-		for i in range(0, limit,step):
+		while (i < limit):
 			nextSize = value.iloc[i+1]['Size']
-			print(nextSize)
+			print("next size is " + str(nextSize))
 			if not isinstance( nextSize, str ):
 				if not math.isnan(nextSize):
-					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
-						value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
+					print("case 1")
+					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),
+						'NA', 'NA', value.iloc[i]['+Total'], 'NA')
 					ramAnalyticalModel.Beams.append(beam)
-					i+=-1
+				i=i+1
 					
-				else:
-					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
+			else:
+				print("case 2")
+				beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
 						value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
-					ramAnalyticalModel.Beams.append(beam)
-					#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
+				ramAnalyticalModel.Beams.append(beam)
+				i=i+1
+				#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
 					#print(key)
-	tempInt = 14
+	tempInt = 8
 	print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
 		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
