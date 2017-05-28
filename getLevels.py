@@ -29,6 +29,7 @@ class Beam:
 		self.End_Coordinate = end_coordinate
 		self.StartTotalRxnPositive = startTotalRxnPositive
 		self.EndTotalRxnPositive = endTotalRxnPositive
+		self.Cantilevered = False
 
 
 
@@ -179,31 +180,37 @@ createSteelBeamRxnPerFloorTypeMapping()
 # Provide Beam Reaction Data
 # TODO: Handle case only start is provided.
 def ProvideBeamRxnData():
+	numBeams = 0
 	for key, value in steelBeamRxnPerFloorType_dict.items():
-		limit = len(value)-1
-		print(limit)
+		#print(value)
+		numFloorTypesWithBeamRxnData = len(steelBeamRxnPerFloorType_dict.items())
+		#print(numFloorTypesWithBeamRxnData)
+		dataFrameIndex =0
 		i =0
-
-		while (i < limit):
-			nextSize = value.iloc[i+1]['Size']
-			print("next size is " + str(nextSize))
-			if not isinstance( nextSize, str ):
-				if not math.isnan(nextSize):
-					print("case 1")
-					beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),
-						'NA', 'NA', value.iloc[i]['+Total'], 'NA')
-					ramAnalyticalModel.Beams.append(beam)
-				i=i+1
-					
-			else:
-				print("case 2")
-				beam = Beam(key,value.iloc[i]['Size'], Coordinate(value.iloc[i]['X'], value.iloc[i]['Y']),Coordinate(value.iloc[(i)+1]['X'],
-						value.iloc[(i)+1]['Y']), value.iloc[i]['+Total'], value.iloc[(i)+1]['+Total'])
+		while (dataFrameIndex < len(value)-1):
+			size = value.iloc[dataFrameIndex]['Size']
+			nextSize = value.iloc[dataFrameIndex+1]['Size']
+			#print("next size is " + str(nextSize))
+			if isinstance( nextSize, str ) and isinstance( size, str ):
+				beam = Beam(key, value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
+					'NA', value.iloc[dataFrameIndex]['+Total'], 'NA')
+				beam.Cantilevered = True
 				ramAnalyticalModel.Beams.append(beam)
-				i=i+1
-				#layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
-					#print(key)
-	tempInt = 8
+				dataFrameIndex=dataFrameIndex+1
+				numBeams+=1
+				#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)					
+			else:
+				if isinstance( size, str ):
+					beam = Beam(key,value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
+						Coordinate(value.iloc[(dataFrameIndex+1)]['X'], value.iloc[(dataFrameIndex+1)]['Y']), value.iloc[dataFrameIndex]['+Total'], value.iloc[(dataFrameIndex+1)]['+Total'])
+					ramAnalyticalModel.Beams.append(beam)
+					#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate.x, beam.End_Coordinate.y, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)
+					numBeams+=1
+				dataFrameIndex=dataFrameIndex+1
+
+	print(len(ramAnalyticalModel.Beams))
+	print(numBeams)
+	tempInt = 0
 	print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
 		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
