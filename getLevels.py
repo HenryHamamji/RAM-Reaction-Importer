@@ -178,13 +178,10 @@ createSteelBeamRxnPerFloorTypeMapping()
 
 
 # Provide Beam Reaction Data
-# TODO: Handle case only start is provided.
 def ProvideBeamRxnData():
 	numBeams = 0
 	for key, value in steelBeamRxnPerFloorType_dict.items():
-		#print(value)
 		numFloorTypesWithBeamRxnData = len(steelBeamRxnPerFloorType_dict.items())
-		#print(numFloorTypesWithBeamRxnData)
 		dataFrameIndex =0
 		i =0
 		while (dataFrameIndex < len(value)-1):
@@ -215,17 +212,11 @@ def ProvideBeamRxnData():
 		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
 		ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
-	#if math.isnan(ramAnalyticalModel.Beams[tempInt].Size):
-		#boolean = True
-		#print(boolean)
-	#print(steelBeamRxnPerFloorType_dict.values())
 
 ProvideBeamRxnData()
 
-#print(steelBeamRxnPerFloorType_df_list[0])
-
 with open('RAM_Analytical_Model.txt', 'w') as outfile:
-	ramAnalyticalModelString = jsonpickle.encode(ramAnalyticalModel.Beams[7])
+	ramAnalyticalModelString = jsonpickle.encode(ramAnalyticalModel.Beams)
 	#ramAnalyticalModelString = steelBeamRxnPerFloorType_df_list[0].to_json(orient='split')
 	outfile.write(ramAnalyticalModelString)
     #json.dump(ramAnalyticalModel.LayoutTypes, outfile)
