@@ -180,6 +180,7 @@ createSteelBeamRxnPerFloorTypeMapping()
 # Provide Beam Reaction Data
 def ProvideBeamRxnData():
 	numBeams = 0
+	numCantiLeveredBeams = 0
 	for key, value in steelBeamRxnPerFloorType_dict.items():
 		numFloorTypesWithBeamRxnData = len(steelBeamRxnPerFloorType_dict.items())
 		dataFrameIndex =0
@@ -195,6 +196,7 @@ def ProvideBeamRxnData():
 				ramAnalyticalModel.Beams.append(beam)
 				dataFrameIndex=dataFrameIndex+1
 				numBeams+=1
+				numCantiLeveredBeams+=1
 				#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)					
 			else:
 				if isinstance( size, str ):
@@ -205,13 +207,32 @@ def ProvideBeamRxnData():
 					numBeams+=1
 				dataFrameIndex=dataFrameIndex+1
 
-	print(len(ramAnalyticalModel.Beams))
-	print(numBeams)
+	print("numBeams: " + str(numBeams))
+	print("numCantileveredBeams: " + str(numCantiLeveredBeams))
+
 	tempInt = 0
-	print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
-		ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
-		ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
-		ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
+	#print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
+		#ramAnalyticalModel.Beams[tempInt].Start_Coordinate.x, ramAnalyticalModel.Beams[tempInt].Start_Coordinate.y,
+		#ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
+		#ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
+
+	myfile = open('beamData.txt', 'w')
+	beamCount = 0
+	cantiLeveredBeamCount = 0;
+	for beam in ramAnalyticalModel.Beams:
+		if(beam.Cantilevered == False):
+			beamInfo = beam.LayoutType + ',' + beam.Size + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + str(beam.End_Coordinate.x) + ',' + str(beam.End_Coordinate.y)+ ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
+			myfile.write(beamInfo)
+			beamCount+=1
+		else:
+			beamInfo = beam.LayoutType + ',' + beam.Size + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + beam.End_Coordinate + ',' + beam.End_Coordinate + ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
+			myfile.write(beamInfo)
+			beamCount+=1
+			cantiLeveredBeamCount+=1
+	myfile.close()
+	print("beamCount: " + str(beamCount))
+	print("cantiLeveredBeamCount: " + str(cantiLeveredBeamCount))
+
 
 ProvideBeamRxnData()
 
