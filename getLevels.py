@@ -3,7 +3,6 @@
 import pandas as pd
 import math
 import json
-import jsonpickle
 
 class Coordinate:
 	def __init__(self,x,y):
@@ -235,9 +234,3 @@ def ProvideBeamRxnData():
 
 
 ProvideBeamRxnData()
-
-with open('RAM_Analytical_Model.txt', 'w') as outfile:
-	ramAnalyticalModelString = jsonpickle.encode(ramAnalyticalModel.Beams)
-	#ramAnalyticalModelString = steelBeamRxnPerFloorType_df_list[0].to_json(orient='split')
-	outfile.write(ramAnalyticalModelString)
-    #json.dump(ramAnalyticalModel.LayoutTypes, outfile)

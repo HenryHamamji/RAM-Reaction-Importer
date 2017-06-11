@@ -1,0 +1,1 @@
+{"py/object": "__main__.Beam", "Cantilevered": false, "EndTotalRxnPositive": 15.9, "End_Coordinate": {"py/object": "__main__.Coordinate", "x": 156, "y": 42.75}, "LayoutType": "Floor Type: LEVEL 2", "Size": "W16X26", "StartTotalRxnPositive": 16.5, "Start_Coordinate": {"py/object": "__main__.Coordinate", "x": 133.85, "y": 42.75}}
