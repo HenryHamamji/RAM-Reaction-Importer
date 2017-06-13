@@ -12,12 +12,14 @@ class Coordinate:
 
 steelBeamRxnPerFloorType_dict = {}
 class RAM_Analytical_Model:
-		def __init__(self, layoutTypes = [], levelCount=0, origin_RAM = Coordinate(0,0), stories = [], beams = []):
+		def __init__(self, layoutTypes = [], levelCount=0, origin_RAM = Coordinate(0,0), stories = [], beams = [], xGrids = [], yGrids = []):
 			self.LayoutTypes = layoutTypes
 			self.LevelCount = levelCount
 			self.Origin_RAM = origin_RAM
 			self.Stories = stories
 			self.Beams = beams
+			self.XGrids = xGrids
+			self.YGrids = yGrids
 
 ramAnalyticalModel = RAM_Analytical_Model()
 
@@ -32,6 +34,10 @@ class Beam:
 		self.Cantilevered = False
 
 
+class Grid:
+	def __init__(self, name, location):
+		self.Name = name
+		self.Location = location
 
 
 class Story:
@@ -110,6 +116,7 @@ while True:
 
 xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
 xGrid_df_sorted = xGrid_df.sort_values(1,ascending = True)
+#print(xGrid_df_sorted)
 
 yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
 yGridCount =0
@@ -122,9 +129,34 @@ while True:
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
 yGrid_df_sorted = yGrid_df.sort_values(1,ascending = True)
-
+#print(yGrid_df_sorted)
 ramAnalyticalModel.Origin_RAM.x = yGrid_df_sorted.iloc[0,1]
 ramAnalyticalModel.Origin_RAM.y = xGrid_df_sorted.iloc[0,1]
+
+
+def ProvideGridData(xGrid_df, yGrid_df):
+	for i in range(0, xGrid_df.shape[0]):
+		grid = Grid(xGrid_df.iloc[i,0], xGrid_df.iloc[i,1])
+		ramAnalyticalModel.XGrids.append(grid)
+	for j in range(0, yGrid_df.shape[0]):
+		grid = Grid(yGrid_df.iloc[j,0], yGrid_df.iloc[j,1])
+		ramAnalyticalModel.YGrids.append(grid)
+
+	myfile = open('xGridData.txt', 'w')
+	for i in range(0, len(ramAnalyticalModel.XGrids)):
+		myfile.write(str(ramAnalyticalModel.XGrids[i].Name) + "," + str(ramAnalyticalModel.XGrids[i].Location))
+		if(i!= len(ramAnalyticalModel.XGrids)-1):
+			myfile.write(";")
+	myfile.close()
+	myfile2 = open('yGridData.txt', 'w')
+	for j in range(0, len(ramAnalyticalModel.YGrids)):
+		myfile2.write(str(ramAnalyticalModel.YGrids[j].Name) + "," + str(ramAnalyticalModel.YGrids[j].Location))
+		if(j!= len(ramAnalyticalModel.YGrids)-1):
+			myfile2.write(";")
+	myfile2.close()
+	#print("Grid Name: " + str(ramAnalyticalModel.YGrids[0].Name), "Grid Location: " + str(ramAnalyticalModel.YGrids[0].Location))
+
+ProvideGridData(xGrid_df_sorted, yGrid_df_sorted)
 
 # GET STEEL BEAM REACTION DATA
 steelBeamRxn_df = pd.read_excel("reactions.xlsx", header = None)
