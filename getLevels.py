@@ -110,6 +110,7 @@ while True:
 xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
 xGrid_df_sorted = xGrid_df.sort_values(1,ascending = True)
 
+print(xGrid_df_sorted)
 yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
 yGridCount =0
 while True:
@@ -121,7 +122,7 @@ while True:
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
 yGrid_df_sorted = yGrid_df.sort_values(1,ascending = True)
-
+print(yGrid_df_sorted)
 ramAnalyticalModel.Origin_RAM.x = yGrid_df_sorted.iloc[0,1]
 ramAnalyticalModel.Origin_RAM.y = xGrid_df_sorted.iloc[0,1]
 
@@ -233,4 +234,19 @@ def ProvideBeamRxnData():
 	print("cantiLeveredBeamCount: " + str(cantiLeveredBeamCount))
 
 
+def WriteRAMModelDataToTXTFile():
+		myfile = open('RAMModelData.txt', 'w')
+		myfile.write("LevelCount:" + str(ramAnalyticalModel.LevelCount) + ";")
+		myfile.write("RAMOriginX:" + str(ramAnalyticalModel.Origin_RAM.x)+";")
+		myfile.write("RAMOriginY:" + str(ramAnalyticalModel.Origin_RAM.y))
+		myfile.close()
+		myfile2 = open('RAMStoryData.txt', 'w')
+		for i in range(0, len(ramAnalyticalModel.Stories)):
+			myfile2.write(str(ramAnalyticalModel.Stories[i].Level)+"," + str(ramAnalyticalModel.Stories[i].StoryLabel) + "," + str(ramAnalyticalModel.Stories[i].LayoutType) + "," + str(ramAnalyticalModel.Stories[i].Height) + "," + str(ramAnalyticalModel.Stories[i].Elevation))
+			if(i != len(ramAnalyticalModel.Stories)-1):
+				myfile2.write(";")
+		myfile2.close()
+
+
+WriteRAMModelDataToTXTFile()
 ProvideBeamRxnData()
