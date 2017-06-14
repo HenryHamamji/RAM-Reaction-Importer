@@ -93,6 +93,7 @@ def CreateStoryDataFrane():
 	storyData_df_sorted = storyData_df_sorted.drop('NaN', 1)
 	storyData_df_sorted['Elevation']=storyData_df_sorted['Height'].cumsum()
 	ProvideStoryData(storyData_df_sorted)
+	print(storyData_df_sorted)
 
 CreateStoryDataFrane()
 
@@ -117,7 +118,7 @@ xGrid_df = df.iloc[xGrid_df_Header+1:xGrid_df_Header+xGridCount+1,1:3]
 xGrid_df_sorted = xGrid_df.sort_values(1,ascending = True)
 #print(xGrid_df_sorted)
 
-print(xGrid_df_sorted)
+#print(xGrid_df_sorted)
 yGrid_df_Header = firstColumn[firstColumn ==" Y Grids"].index[0]
 yGridCount =0
 while True:
@@ -129,11 +130,9 @@ while True:
 
 yGrid_df = df.iloc[yGrid_df_Header+1:yGrid_df_Header+yGridCount+1,1:3]
 yGrid_df_sorted = yGrid_df.sort_values(1,ascending = True)
-<<<<<<< HEAD
-print(yGrid_df_sorted)
-=======
+
 #print(yGrid_df_sorted)
->>>>>>> 8ae540e7778d5a4977f3191d320819c094ba40e4
+#print(yGrid_df_sorted)
 ramAnalyticalModel.Origin_RAM.x = yGrid_df_sorted.iloc[0,1]
 ramAnalyticalModel.Origin_RAM.y = xGrid_df_sorted.iloc[0,1]
 
