@@ -1,0 +1,32 @@
+Echo of Input Data
+RAM Manager
+15.03.00.000
+HFH
+DataBase: Structural_1
+Building Code: IBC
+
+05/17/17 10:57:25
+Layout Types:
+Level 1
+Level 3
+Level 2
+Tables Selected:
+Deck Table:, ramdecks
+Master Steel Table:,ramaisc
+Default Steel Table:,ramaisc
+Alternate Steel Table:, ramaisc
+Column Steel Table:,ramaisc
+Reinforcement Table:,ramastm
+Pan Form Table:, ramceco
+Story Data:
+ Level,, Story Label, Layout Type, Height (ft)
+Grid Systems:
+ System Label,  Type,  X Offset,  Y Offset, Rotation
+,, ft, ft
+Grids:
+ DATA FOR FLOOR TYPE: Level 1
+Grid Systems:
+ DATA FOR FLOOR TYPE: Level 3
+Grid Systems:
+ DATA FOR FLOOR TYPE: Level 2
+Grid Systems:

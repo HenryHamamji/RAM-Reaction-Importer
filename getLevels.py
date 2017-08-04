@@ -3,6 +3,47 @@
 import pandas as pd
 import math
 import json
+import sys
+import xlrd
+
+RAMModelFilePath= ""
+RAMReactionsFilePath=""
+RAMStudsFilePath=""
+RAMCamberFilePath=""
+
+def ClassifyFilePath(path):
+	book = xlrd.open_workbook(path)
+	first_sheet = book.sheet_by_index(0)
+	cell = first_sheet.cell(0,0)
+	if "Echo" in str(cell.value):
+		RAMModelFilePath = path
+		myfile = open('args2.txt', 'a')
+		myfile.write(RAMModelFilePath)
+		myfile.write('\n')
+		myfile.close()
+	if "Reaction" in str(cell.value):
+		RAMReactionsFilePath = path
+		myfile = open('args2.txt', 'a')
+		myfile.write(RAMReactionsFilePath)
+		myfile.close()
+	if "Beam Summary" in str(cell.value):
+		RAMStudsFilePath = path
+		myfile = open('args2.txt', 'a')
+		myfile.write(RAMStudsFilePath)
+		myfile.close()
+	if "Deflection" in str(cell.value):
+		RAMCamberFilePath = path
+		myfile = open('args2.txt', 'a')
+		myfile.write(RAMCamberFilePath)
+		myfile.close()
+
+def GatherFilePaths():
+	open('args2.txt', 'w').close()
+	for i in range(1,len(sys.argv)):
+		path = sys.argv[i]
+		ClassifyFilePath(path)
+
+GatherFilePaths()
 
 class Coordinate:
 	def __init__(self,x,y):
@@ -47,7 +88,7 @@ class Story:
 		self.Height = height
 		self.Elevation = elevation
 
-df = pd.read_excel("data echo.xlsx", header = None)
+df = pd.read_excel(RAMModelFilePath, header = None)
 df.index+=1
 
 def getFirstColumn_df(df):
@@ -162,7 +203,7 @@ def ProvideGridData(xGrid_df, yGrid_df):
 ProvideGridData(xGrid_df_sorted, yGrid_df_sorted)
 
 # GET STEEL BEAM REACTION DATA
-steelBeamRxn_df = pd.read_excel("reactions.xlsx", header = None)
+steelBeamRxn_df = pd.read_excel(RAMReactionsFilePath, header = None)
 steelBeamRxn_df.index+=1
 firstColumnSteelBeamRxns = steelBeamRxn_df.iloc[:,0]
 
@@ -282,6 +323,12 @@ def WriteRAMModelDataToTXTFile():
 				myfile2.write(";")
 		myfile2.close()
 
+def WriteArgsToFile():
+	myfile = open('args.txt', 'w')
+	for i in range(1,len(sys.argv)):
+		myfile.write("filepath:" + sys.argv[i])
+	myfile.close()
 
+WriteArgsToFile()
 WriteRAMModelDataToTXTFile()
 ProvideBeamRxnData()
