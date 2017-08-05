@@ -6,8 +6,11 @@ import json
 import sys
 import xlrd
 
-RAMModelFilePath= ""
+RAMModelFilePath=""
+RAMModelFilePath2 = "data echo.xlsx"
 RAMReactionsFilePath=""
+RAMReactionsFilePath2="reactions.xlsx"
+
 RAMStudsFilePath=""
 RAMCamberFilePath=""
 
@@ -64,14 +67,16 @@ class RAM_Analytical_Model:
 ramAnalyticalModel = RAM_Analytical_Model()
 
 class Beam:
-	def __init__(self, layoutType, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
+	def __init__(self, layoutType, idNum, size, start_Coordinate, end_coordinate,  startTotalRxnPositive, endTotalRxnPositive):
 		self.LayoutType = layoutType
+		self.Id = idNum
 		self.Size = size
 		self.Start_Coordinate = start_Coordinate
 		self.End_Coordinate = end_coordinate
 		self.StartTotalRxnPositive = startTotalRxnPositive
 		self.EndTotalRxnPositive = endTotalRxnPositive
 		self.Cantilevered = False
+
 
 
 class Grid:
@@ -229,8 +234,10 @@ steelBeamRxnPerFloorType_df_endIndexes.append(rowCount+1)
 
 steelBeamRxnPerFloorType_df_list = []
 for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
-	steelBeamRxnPerFloorType_df=steelBeamRxn_df.iloc[steelBeamRxnPerFloorType_df_startIndexes[i]:steelBeamRxnPerFloorType_df_endIndexes[i],2:10]
-	steelBeamRxnPerFloorType_df.columns = ['Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
+	steelBeamRxnPerFloorType_df=steelBeamRxn_df.iloc[steelBeamRxnPerFloorType_df_startIndexes[i]:steelBeamRxnPerFloorType_df_endIndexes[i],0:10]
+	steelBeamRxnPerFloorType_df.columns = ['Id', 'blank', 'Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
+	steelBeamRxnPerFloorType_df = steelBeamRxnPerFloorType_df.drop(['blank'], axis=1)
+	print(steelBeamRxnPerFloorType_df)
 	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
 
 
@@ -264,9 +271,11 @@ def ProvideBeamRxnData():
 		while (dataFrameIndex < len(value)-1):
 			size = value.iloc[dataFrameIndex]['Size']
 			nextSize = value.iloc[dataFrameIndex+1]['Size']
+			currentId = value.iloc[dataFrameIndex]['Id']
+			nextId = value.iloc[dataFrameIndex+1]['Id']
 			#print("next size is " + str(nextSize))
 			if isinstance( nextSize, str ) and isinstance( size, str ):
-				beam = Beam(key, value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
+				beam = Beam(key, value.iloc[dataFrameIndex]['Id'], value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
 					'NA', value.iloc[dataFrameIndex]['+Total'], 'NA')
 				beam.Cantilevered = True
 				ramAnalyticalModel.Beams.append(beam)
@@ -276,12 +285,13 @@ def ProvideBeamRxnData():
 				#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)					
 			else:
 				if isinstance( size, str ):
-					beam = Beam(key,value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
+					beam = Beam(key,value.iloc[dataFrameIndex]['Id'], value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
 						Coordinate(value.iloc[(dataFrameIndex+1)]['X'], value.iloc[(dataFrameIndex+1)]['Y']), value.iloc[dataFrameIndex]['+Total'], value.iloc[(dataFrameIndex+1)]['+Total'])
 					ramAnalyticalModel.Beams.append(beam)
 					#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate.x, beam.End_Coordinate.y, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)
 					numBeams+=1
 				dataFrameIndex=dataFrameIndex+1
+				#print(value.iloc[dataFrameIndex]['Id'])
 
 	print("numBeams: " + str(numBeams))
 	print("numCantileveredBeams: " + str(numCantiLeveredBeams))
@@ -297,11 +307,12 @@ def ProvideBeamRxnData():
 	cantiLeveredBeamCount = 0;
 	for beam in ramAnalyticalModel.Beams:
 		if(beam.Cantilevered == False):
-			beamInfo = beam.LayoutType + ',' + beam.Size + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + str(beam.End_Coordinate.x) + ',' + str(beam.End_Coordinate.y)+ ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
+			print(str(beam.Id))
+			beamInfo = str(beam.LayoutType) + ',' + str(beam.Id) + ',' + str(beam.Size) + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + str(beam.End_Coordinate.x) + ',' + str(beam.End_Coordinate.y)+ ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
 			myfile.write(beamInfo)
 			beamCount+=1
 		else:
-			beamInfo = beam.LayoutType + ',' + beam.Size + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + beam.End_Coordinate + ',' + beam.End_Coordinate + ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
+			beamInfo = str(beam.LayoutType) + ',' + str(beam.Id) +',' + str(beam.Size) + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + beam.End_Coordinate + ',' + beam.End_Coordinate + ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
 			myfile.write(beamInfo)
 			beamCount+=1
 			cantiLeveredBeamCount+=1
