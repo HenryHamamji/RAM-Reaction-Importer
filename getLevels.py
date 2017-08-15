@@ -5,45 +5,41 @@ import math
 import json
 import sys
 import xlrd
+import os
 
-RAMModelFilePath=""
+global RAMModelFilePath
 RAMModelFilePath2 = "data echo.xlsx"
-RAMReactionsFilePath=""
+global RAMReactionsFilePath
 RAMReactionsFilePath2="reactions.xlsx"
-
-RAMStudsFilePath=""
-RAMCamberFilePath=""
 
 def ClassifyFilePath(path):
 	book = xlrd.open_workbook(path)
 	first_sheet = book.sheet_by_index(0)
 	cell = first_sheet.cell(0,0)
+	#myfile = open('args2.txt', 'a')
+
 	if "Echo" in str(cell.value):
-		RAMModelFilePath = path
+		global RAMModelFilePath
+		RAMModelFilePath = os.path.basename(path)
 		myfile = open('args2.txt', 'a')
 		myfile.write(RAMModelFilePath)
 		myfile.write('\n')
 		myfile.close()
 	if "Reaction" in str(cell.value):
-		RAMReactionsFilePath = path
+		global RAMReactionsFilePath
+		RAMReactionsFilePath = os.path.basename(path)
 		myfile = open('args2.txt', 'a')
 		myfile.write(RAMReactionsFilePath)
+		myfile.write('\n')
 		myfile.close()
-	if "Beam Summary" in str(cell.value):
-		RAMStudsFilePath = path
-		myfile = open('args2.txt', 'a')
-		myfile.write(RAMStudsFilePath)
-		myfile.close()
-	if "Deflection" in str(cell.value):
-		RAMCamberFilePath = path
-		myfile = open('args2.txt', 'a')
-		myfile.write(RAMCamberFilePath)
-		myfile.close()
+
 
 def GatherFilePaths():
 	open('args2.txt', 'w').close()
-	for i in range(1,len(sys.argv)):
+	for i in range(1,len(sys.argv)-2):
 		path = sys.argv[i]
+		if(path==''):
+			continue
 		ClassifyFilePath(path)
 
 GatherFilePaths()
@@ -93,6 +89,7 @@ class Story:
 		self.Height = height
 		self.Elevation = elevation
 
+
 df = pd.read_excel(RAMModelFilePath, header = None)
 df.index+=1
 
@@ -139,7 +136,7 @@ def CreateStoryDataFrane():
 	storyData_df_sorted = storyData_df_sorted.drop('NaN', 1)
 	storyData_df_sorted['Elevation']=storyData_df_sorted['Height'].cumsum()
 	ProvideStoryData(storyData_df_sorted)
-	print(storyData_df_sorted)
+	#print(storyData_df_sorted)
 
 CreateStoryDataFrane()
 
@@ -237,7 +234,7 @@ for i in range(len(steelBeamRxnPerFloorType_df_startIndexes)):
 	steelBeamRxnPerFloorType_df=steelBeamRxn_df.iloc[steelBeamRxnPerFloorType_df_startIndexes[i]:steelBeamRxnPerFloorType_df_endIndexes[i],0:10]
 	steelBeamRxnPerFloorType_df.columns = ['Id', 'blank', 'Size', 'X', 'Y', 'DL', '+LL', "-LL", '+Total', '-Total']
 	steelBeamRxnPerFloorType_df = steelBeamRxnPerFloorType_df.drop(['blank'], axis=1)
-	print(steelBeamRxnPerFloorType_df)
+	#print(steelBeamRxnPerFloorType_df)
 	steelBeamRxnPerFloorType_df_list.append(steelBeamRxnPerFloorType_df)
 
 
@@ -276,7 +273,7 @@ def ProvideBeamRxnData():
 			#print("next size is " + str(nextSize))
 			if isinstance( nextSize, str ) and isinstance( size, str ):
 				beam = Beam(key, value.iloc[dataFrameIndex]['Id'], value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
-					'NA', value.iloc[dataFrameIndex]['+Total'], 'NA')
+					'NA', (1.2*value.iloc[dataFrameIndex]['DL'])+(1.6*value.iloc[dataFrameIndex]['+LL']), 'NA')
 				beam.Cantilevered = True
 				ramAnalyticalModel.Beams.append(beam)
 				dataFrameIndex=dataFrameIndex+1
@@ -286,15 +283,12 @@ def ProvideBeamRxnData():
 			else:
 				if isinstance( size, str ):
 					beam = Beam(key,value.iloc[dataFrameIndex]['Id'], value.iloc[dataFrameIndex]['Size'], Coordinate(value.iloc[dataFrameIndex]['X'], value.iloc[dataFrameIndex]['Y']),
-						Coordinate(value.iloc[(dataFrameIndex+1)]['X'], value.iloc[(dataFrameIndex+1)]['Y']), value.iloc[dataFrameIndex]['+Total'], value.iloc[(dataFrameIndex+1)]['+Total'])
+						Coordinate(value.iloc[(dataFrameIndex+1)]['X'], value.iloc[(dataFrameIndex+1)]['Y']), (1.2*value.iloc[dataFrameIndex]['DL'])+(1.6*value.iloc[dataFrameIndex]['+LL']), (1.2*value.iloc[(dataFrameIndex+1)]['DL'])+(1.6*value.iloc[(dataFrameIndex+1)]['+LL']))
 					ramAnalyticalModel.Beams.append(beam)
 					#print(beam.LayoutType, beam.Size, beam.Start_Coordinate.x, beam.Start_Coordinate.y, beam.End_Coordinate.x, beam.End_Coordinate.y, beam.StartTotalRxnPositive, beam.EndTotalRxnPositive)
 					numBeams+=1
 				dataFrameIndex=dataFrameIndex+1
 				#print(value.iloc[dataFrameIndex]['Id'])
-
-	print("numBeams: " + str(numBeams))
-	print("numCantileveredBeams: " + str(numCantiLeveredBeams))
 
 	tempInt = 0
 	#print(ramAnalyticalModel.Beams[tempInt].LayoutType, ramAnalyticalModel.Beams[tempInt].Size,
@@ -302,24 +296,27 @@ def ProvideBeamRxnData():
 		#ramAnalyticalModel.Beams[tempInt].End_Coordinate.x, ramAnalyticalModel.Beams[tempInt].End_Coordinate.y,
 		#ramAnalyticalModel.Beams[tempInt].StartTotalRxnPositive, ramAnalyticalModel.Beams[tempInt].EndTotalRxnPositive)
 
-	myfile = open('beamData.txt', 'w')
+	myfile3 = open('beamData.txt', 'w')
 	beamCount = 0
 	cantiLeveredBeamCount = 0;
 	for beam in ramAnalyticalModel.Beams:
 		if(beam.Cantilevered == False):
-			print(str(beam.Id))
+			#print(str(beam.Id))
 			beamInfo = str(beam.LayoutType) + ',' + str(beam.Id) + ',' + str(beam.Size) + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + str(beam.End_Coordinate.x) + ',' + str(beam.End_Coordinate.y)+ ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
-			myfile.write(beamInfo)
+			myfile3.write(beamInfo)
 			beamCount+=1
 		else:
 			beamInfo = str(beam.LayoutType) + ',' + str(beam.Id) +',' + str(beam.Size) + ',' + str(beam.Start_Coordinate.x) + ',' + str(beam.Start_Coordinate.y) + ',' + beam.End_Coordinate + ',' + beam.End_Coordinate + ',' + str(beam.StartTotalRxnPositive) + ',' + str(beam.EndTotalRxnPositive) + ';'
-			myfile.write(beamInfo)
+			myfile3.write(beamInfo)
 			beamCount+=1
 			cantiLeveredBeamCount+=1
-	myfile.close()
-	print("beamCount: " + str(beamCount))
-	print("cantiLeveredBeamCount: " + str(cantiLeveredBeamCount))
-
+	myfile3.close()
+	#print("beamCount: " + str(beamCount))
+	#print("cantiLeveredBeamCount: " + str(cantiLeveredBeamCount))
+	testfile = open('args3.txt', 'a')
+	testfile.write("worked")
+	testfile.write('\n')
+	testfile.close()
 
 def WriteRAMModelDataToTXTFile():
 		myfile = open('RAMModelData.txt', 'w')
